@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIMITLESSAI4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Changed to hidden to manage full-screen layout better */
+            color: #0ff; 
+        }
+
+        .title {
+            text-align: center;
+            font-size: 58px;
+            font-weight: bold;
+            color: silver;
+            text-shadow: 0 0 10px silver, 0 0 20px silver;
+            padding: 15px 0;
+            background: #000;
+        }
+        
+        /* NEW STYLES: Container for the initial greeting message */
+        .initial-greeting-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 20px 20px 0; 
+            flex: 1; 
+            text-align: center;
+        }
+        
+        /* NEW STYLES: Styling for the message within the initial container */
+        .initial-greeting-container .bot-message {
+            align-self: center;
+            max-width: 600px; 
+            font-size: 1.2em;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .infinity-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .infinity {
+            font-size: 200px;
+            color: #0ff;
+            text-shadow: 0 0 30px #0ff, 0 0 60px #0ff;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .chat-container {
+            display: none; /* Starts hidden */
+            flex: 1;
+            /* width: 80%; /* Optional: to make it narrower */
+            /* margin: 0 auto; /* Optional: to center it */
+            border: 3px solid #0ff;
+            border-radius: 0;
+            box-shadow: 0 0 20px #0ff, 0 0 40px #0ff, inset 0 0 20px rgba(0, 255, 255, 0.2);
+            padding: 25px;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            background: rgba(0, 20, 40, 0.8);
+            margin: 0;
+        }
+
+        .chat-container.active {
+            display: flex;
+        }
+        
+        /* The main content area that holds the initial screen or the chat */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* Allow chat content to scroll */
+        }
+        
+        .main-content.hidden-elements > :not(.chat-container.active) {
+            display: none !important;
+        }
+
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 85%;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .user-message {
+            background: rgba(0, 255, 255, 0.2);
+            align-self: flex-end;
+            border: 1px solid #0ff;
+            color: #0ff;
+        }
+
+        .bot-message {
+            background: rgba(0, 255, 0, 0.2);
+            align-self: flex-start;
+            border: 1px solid #0ff;
+            color: #fff; 
+        }
+
+        .input-section {
+            background: #000;
+            padding: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            background: rgba(0, 20, 40, 0.9);
+            border: 2px solid #0ff;
+            border-radius: 8px;
+            color: #0ff;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+        #userInput:focus {
+            outline: none;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        #sendBtn {
+            padding: 15px 25px;
+            font-size: 16px;
+            background: #0ff;
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px #0ff;
+            transition: all 0.3s;
+        }
+
+        #sendBtn:hover {
+            background: #0cc;
+            box-shadow: 0 0 25px #0ff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            color: gold;
+            text-shadow: 0 0 10px gold;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">LIMITLESSAI4</div>
+    
+    <div class="main-content" id="mainContent">
+        <div class="initial-greeting-container" id="initialGreetingContainer">
+            <div class="message bot-message">Welcome to LIMITLESSAI4! How can I help you?</div>
+        </div>
+        
+        <div class="infinity-container" id="infinityContainer">
+            <div class="infinity">∞</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+        </div>
+    </div>
+
+    <div class="input-section">
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off" />
+            <button id="sendBtn">Send</button>
+        </div>
+        <div class="footer">© Limitless.AI4 2025 Until Forever Powered By Zero Gravity Block Chain </div>
+    </div>
+
+<script>
+    // ⚠️ IMPORTANT: REPLACE THIS KEY WITH YOUR ACTUAL GEMINI API KEY 
+    const GEMINI_API_KEY = "AIzaSyAUzWKa7_t0CJ-PF5VD9VFPRu1CCjrSGPI"; // Use your actual key
+    // NOTE: For security, a production app should use a backend to proxy API calls.
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY;
+
+    // --- DOM Element Selection ---
+    const mainContent = document.getElementById('mainContent'); // New selection
+    const infinityContainer = document.getElementById('infinityContainer');
+    const initialGreetingContainer = document.getElementById('initialGreetingContainer'); 
+    const chatContainer = document.getElementById('chatContainer');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let firstMessage = true; // Renamed 'first' to 'firstMessage' for clarity
+    
+    // --- Message History ---
+    // This array will store the conversation history to maintain context
+    let history = []; 
+
+    // --- Utility Functions ---
+
+    /**
+     * Creates and appends a message element to the chat container.
+     * @param {string} text The message content.
+     * @param {string} senderRole 'user' or 'bot'.
+     * @returns {HTMLElement} The created message element.
+     */
+    function createMessageElement(text, senderRole) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        if (senderRole === 'user') {
+            messageDiv.classList.add('user-message');
+        } else {
+            messageDiv.classList.add('bot-message');
+        }
+
+        messageDiv.textContent = text;
+        chatContainer.appendChild(messageDiv);
+        // Scroll to the bottom of the chat container
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return messageDiv;
+    }
+
+    /**
+     * Handles user input and initiates the API call.
+     */
+    async function sendMessage() {
+        const userMessage = userInput.value.trim();
+        if (userMessage === "") return;
+
+        // 1. Display the user's message
+        createMessageElement(userMessage, 'user');
+
+        // 2. Clear the input field
+        userInput.value = '';
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+
+        // 3. Handle the transition from the initial screen to the chat view
+        if (firstMessage) {
+            // Hide the initial elements
+            initialGreetingContainer.style.display = 'none';
+            infinityContainer.style.display = 'none';
+            // Show the chat container and add a class to the main content
+            chatContainer.classList.add('active');
+            mainContent.classList.add('hidden-elements');
+            firstMessage = false;
+        }
+
+        // 4. Call the API and stream the bot's response
+        try {
+            await callGeminiStream(userMessage);
+        } catch (error) {
+            console.error("Gemini API Error:", error);
+            createMessageElement("🤖 Error: Sorry, I encountered an error. Please try again.", 'bot');
+        } finally {
+            // 5. Re-enable input
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+    }
+
+
+    /**
+     * Calls the Gemini API and streams the response back to the chat.
+     */
+    async function callGeminiStream(userMessage) {
+        
+        // Add the new user message to the history
+        history.push({
+            role: "user",
+            parts: [{ text: userMessage }]
+        });
+        
+        const payload = {
+            contents: history, 
+            config: {
+                stream: true, 
+                temperature: 0.7, 
+            },
+        };
+
+        const response = await fetch(GEMINI_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.body) {
+            throw new Error("Failed to get response body from API.");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let fullResponseText = "";
+        
+        // Create the element to hold the bot's response right away
+        const botMsgElement = createMessageElement("...", 'bot'); // Placeholder text
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                // API streams chunks of JSON objects that need to be parsed
+                const lines = chunk.split('\n');
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const jsonText = line.substring(6).trim();
+                            if (jsonText) {
+                                const data = JSON.parse(jsonText);
+                                const newText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                                if (newText) {
+                                    fullResponseText += newText;
+                                    // Update the text content of the message element
+                                    botMsgElement.textContent = fullResponseText;
+                                    // Scroll to the latest message
+                                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                                }
+                            }
+                        } catch (e) {
+                            console.error("JSON parsing error:", e, "Line:", line);
+                            // Can ignore non-json lines if necessary
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+            // Ensure the bot message element has the final text
+            botMsgElement.textContent = fullResponseText; 
+            
+            // Add the final complete response to the history for context in next message
+            history.push({
+                role: "model",
+                parts: [{ text: fullResponseText }]
+            });
+        }
+    }
+
+    // --- Event Listeners ---
+    sendBtn.onclick = sendMessage;
+    userInput.onkeydown = e => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent default Enter action (like form submission)
+            sendMessage();
+        }
+    };
+    userInput.focus();
+</script>
+</body>
+</html>
